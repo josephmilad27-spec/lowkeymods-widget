@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>LowkeyMods — Favorites</title>
+<style>
+  :root{
+    --bg:#0D0D0D; --accent:#C1272D; --muted:#6b6b6b; --text:#E5DCC5;
+  }
+  body{font-family:Inter,Arial,system-ui; margin:0; background:var(--bg); color:var(--text);}
+  .wrap{max-width:980px;margin:16px auto;padding:18px;}
+  .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.03);padding:12px;border-radius:10px;margin-bottom:12px;display:flex;gap:12px;align-items:center;}
+  img.prod{width:84px;height:60px;object-fit:cover;border-radius:6px}
+  button{background:var(--accent);color:var(--text);border:none;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600;}
+  .muted{color:var(--muted);font-size:13px}
+  .row{display:flex;gap:8px;align-items:center}
+  .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  input[type=email], input[type=password]{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:#141414;color:var(--text)}
+  .center{display:flex;align-items:center;justify-content:center}
+  a.link{color:var(--accent);text-decoration:none}
+  .small{font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <div>
+        <h2 style="margin:0">Favorites • LowkeyMods</h2>
+        <div class="muted">Save products to view or order later</div>
+      </div>
+      <div id="authArea"></div>
+    </div>
+
+    <div id="authForms"></div>
+    <div id="content"></div>
+  </div>
+
+<script type="module">
+  // Firebase imports (v12.6.0)
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+  import { getFirestore, doc, collection, setDoc, deleteDoc, getDocs, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+  // ---------- PASTE YOUR FIREBASE CONFIG ----------
+  const firebaseConfig = {
+    apiKey: "AIzaSyBqDItP58Soa4A2rG98ZOLULEbHxB8XG1M",
+    authDomain: "lowkeymods27.firebaseapp.com",
+    projectId: "lowkeymods27",
+    storageBucket: "lowkeymods27.firebasestorage.app",
+    messagingSenderId: "814041484874",
+    appId: "1:814041484874:web:867a38f37c394a2a72e0b3"
+  };
+  // -----------------------------------------------
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  const authArea = document.getElementById('authArea');
+  const authForms = document.getElementById('authForms');
+  const content = document.getElementById('content');
+
+  // Read product info from query params: ?id=...&title=...&price=...&img=...
+  function getQuery() {
+    const params = new URLSearchParams(location.search);
+    return {
+      productId: params.get('id') || '',
+      title: params.get('title') || '',
+      price: params.get('price') || '',
+      img: params.get('img') || ''
+    };
+  }
+
+  function renderAuthUi(user) {
+    authArea.innerHTML = '';
+    authForms.innerHTML = '';
+    if (user) {
+      const btn = document.createElement('button');
+      btn.textContent = 'Sign out';
+      btn.onclick = async () => { await signOut(auth); };
+      authArea.appendChild(btn);
+      renderContent(user);
+    } else {
+      const signInBtn = document.createElement('button');
+      signInBtn.textContent = 'Sign in';
+      signInBtn.onclick = () => showSignIn();
+      const signUpBtn = document.createElement('button');
+      signUpBtn.textContent = 'Sign up';
+      signUpBtn.style.background = '#222';
+      signUpBtn.style.color = 'var(--text)';
+      signUpBtn.onclick = () => showSignUp();
+      authArea.appendChild(signInBtn);
+      authArea.appendChild(signUpBtn);
+      renderPreview();
+    }
+  }
+
+  function showSignIn(){
+    authForms.innerHTML = `
+      <div style="margin-bottom:12px;">
+        <input id="email" type="email" placeholder="Email" /><br/><br/>
+        <input id="pw" type="password" placeholder="Password" /><br/><br/>
+        <div class="row"><button id="doSignIn">Sign in</button><div class="muted small" style="margin-left:8px">or <a class="link" id="gotoSignup">create an account</a></div></div>
+      </div>`;
+    document.getElementById('doSignIn').onclick = async ()=>{
+      const email = document.getElementById('email').value;
+      const pw = document.getElementById('pw').value;
+      try {
+        await signInWithEmailAndPassword(auth, email, pw);
+      } catch(e){ alert('Sign in error: '+e.message); }
+    }
+    document.getElementById('gotoSignup').onclick = showSignUp;
+  }
+
+  function showSignUp(){
+    authForms.innerHTML = `
+      <div style="margin-bottom:12px;">
+        <input id="s_email" type="email" placeholder="Email" /><br/><br/>
+        <input id="s_pw" type="password" placeholder="Password (6+ chars)" /><br/><br/>
+        <div class="row"><button id="doSignUp">Create account</button></div>
+      </div>`;
+    document.getElementById('doSignUp').onclick = async ()=>{
+      const email = document.getElementById('s_email').value;
+      const pw = document.getElementById('s_pw').value;
+      try {
+        await createUserWithEmailAndPassword(auth, email, pw);
+      } catch(e){ alert('Sign up error: '+e.message); }
+    }
+  }
+
+  // Show preview card if opened with product query
+  function renderPreview(){
+    const q = getQuery();
+    content.innerHTML = '';
+    if (!q.productId) {
+      content.innerHTML = `<div class="muted center">Open a product and click "Add to favorites".</div>`;
+      return;
+    }
+    const c = document.createElement('div');
+    c.className = 'card';
+    c.innerHTML = `<img class="prod" src="${q.img || 'https://via.placeholder.com/300x200?text=Lowkey'}" />
+      <div style="flex:1">
+        <div style="font-weight:700">${escapeHtml(q.title || 'Product')}</div>
+        <div class="muted">${escapeHtml(q.price || '')}</div>
+        <div style="margin-top:8px"><button id="favNow">Add to favorites</button></div>
+      </div>`;
+    content.appendChild(c);
+    document.getElementById('favNow').onclick = async ()=>{
+      if (!auth.currentUser) {
+        showSignIn();
+        return;
+      }
+      await addFavorite(auth.currentUser.uid, q);
+      alert('Added to favorites');
+    }
+  }
+
+  // Render favorites list for signed-in user
+  async function renderContent(user){
+    authForms.innerHTML = '';
+    content.innerHTML = '<div class="muted center">Loading your favorites...</div>';
+    const favCol = collection(db, 'users', user.uid, 'favorites');
+    const q = query(favCol, orderBy('createdAt','desc'));
+    const snap = await getDocs(q);
+    content.innerHTML = '';
+    if (snap.empty) {
+      content.innerHTML = `<div class="muted center">No favorites yet. <br/>Open a product and click "Add to favorites".</div>`;
+      return;
+    }
+    snap.forEach(docSnap => {
+      const data = docSnap.data();
+      const item = document.createElement('div');
+      item.className = 'card';
+      item.innerHTML = `
+        <img class="prod" src="${data.img || 'https://via.placeholder.com/300x200'}" />
+        <div style="flex:1">
+          <div style="font-weight:700">${escapeHtml(data.title)}</div>
+          <div class="muted">${escapeHtml(data.price || '')}</div>
+          <div style="margin-top:8px" class="row">
+            <button class="remove" data-id="${docSnap.id}">Remove</button>
+            <a class="link" href="https://www.instagram.com/lowkey._.mods" target="_blank" style="margin-left:8px">Order (DM)</a>
+          </div>
+        </div>`;
+      content.appendChild(item);
+    });
+    document.querySelectorAll('.remove').forEach(btn=>{
+      btn.onclick = async (ev)=>{
+        const id = ev.target.dataset.id;
+        await deleteDoc(doc(db, 'users', user.uid, 'favorites', id));
+        renderContent(user);
+      }
+    });
+  }
+
+  async function addFavorite(uid, product){
+    const id = product.productId;
+    const ref = doc(db, 'users', uid, 'favorites', id);
+    await setDoc(ref, {
+      title: product.title || '',
+      price: product.price || '',
+      img: product.img || '',
+      createdAt: serverTimestamp()
+    });
+  }
+
+  onAuthStateChanged(auth, user => {
+    renderAuthUi(user);
+  });
+
+  function escapeHtml(s){ return (s||'').toString().replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+</script>
+</body>
+</html>
