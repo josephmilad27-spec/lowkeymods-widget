@@ -3,127 +3,54 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>LowkeyMods — Favorites</title>
+  <title>LowkeyMods Widget</title>
   <style>
-    :root{
-      --bg:#0D0D0D;
-      --accent:#C1272D;
-      --muted:#6b6b6b;
-      --text:#E5DCC5;
-    }
-    *{box-sizing:border-box;}
-    body{
-      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-      margin:0;
-      background:var(--bg);
-      color:var(--text);
-    }
-    .wrap{
-      max-width:980px;
-      margin:16px auto;
-      padding:18px;
-    }
-    .header{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      margin-bottom:12px;
-      gap:8px;
-    }
-    h2{margin:0;font-size:20px;}
-    .muted{color:var(--muted);font-size:13px;}
-    button{
-      background:var(--accent);
-      color:var(--text);
-      border:none;
-      padding:7px 11px;
-      border-radius:8px;
-      cursor:pointer;
-      font-weight:600;
-      font-size:13px;
-      white-space:nowrap;
-    }
-    button.secondary{
-      background:#222;
-      color:var(--text);
-    }
-    input[type=email],input[type=password]{
-      width:100%;
-      padding:9px 10px;
-      border-radius:8px;
-      border:1px solid rgba(255,255,255,0.08);
-      background:#141414;
-      color:var(--text);
-      font-size:14px;
-    }
-    input::placeholder{color:#555;}
-    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
-    .auth-block{margin-bottom:12px;}
-    .card{
-      background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01));
-      border:1px solid rgba(255,255,255,0.06);
-      padding:10px;
-      border-radius:10px;
-      margin-bottom:10px;
-      display:flex;
-      gap:10px;
-      align-items:center;
-    }
-    img.prod{
-      width:80px;
-      height:60px;
-      object-fit:cover;
-      border-radius:6px;
-      background:#111;
-    }
-    .center{display:flex;align-items:center;justify-content:center;text-align:center;}
-    a.link{color:var(--accent);text-decoration:none;font-size:13px;}
-    a.link:hover{text-decoration:underline;}
-    .small{font-size:13px;}
-    @media (max-width:600px){
-      .wrap{padding:10px;}
-      .header{flex-direction:column;align-items:flex-start;}
-      .card{flex-direction:row;}
-    }
+    :root{--bg:#0e0e0f;--card:#121214;--muted:#bfb6ae;--accent:#c1272d;--accent-2:#e5dcc5}
+    html,body{height:100%;margin:0;font-family:Inter,Arial,Helvetica,sans-serif;background:var(--bg);color:var(--accent-2)}
+    .wrap{max-width:1100px;margin:20px auto;padding:18px}
+    .header{display:flex;align-items:center;justify-content:space-between}
+    h1{margin:0;font-size:20px}
+    .subtitle{color:var(--muted);font-size:13px;margin-top:6px}
+    .auth{display:flex;gap:8px;align-items:center}
+    button{background:var(--accent);border:none;padding:8px 12px;border-radius:8px;color:#fff;font-weight:700;cursor:pointer}
+    button.secondary{background:transparent;border:1px solid rgba(255,255,255,0.08);color:var(--accent-2);padding:6px 10px}
+    .mini{display:flex;gap:10px;align-items:center}
+    .content{margin-top:18px}
+    .card{display:flex;gap:12px;align-items:center;padding:12px;background:rgba(255,255,255,0.02);border-radius:8px;border:1px solid rgba(255,255,255,0.02)}
+    .prod{width:80px;height:60px;object-fit:cover;background:#222;border-radius:6px}
+    .muted{color:var(--muted)}
+    .row{display:flex;gap:8px}
+    .remove{background:#7a1b1f}
+    .link{color:var(--accent-2);text-decoration:none;padding:8px}
+    a.tiny{color:var(--muted);font-size:13px;text-decoration:none}
+    .empty{padding:40px;border-radius:8px;background:rgba(255,255,255,0.01);color:var(--muted)}
+    .notice{padding:8px 10px;border-radius:6px;background:#1a1a1b;color:var(--muted);font-size:13px}
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="header">
       <div>
-        <h2>Favorites • LowkeyMods</h2>
-        <div class="muted" id="subtitle">Save products to view or order later</div>
+        <h1>Favorites • LowkeyMods</h1>
+        <div class="subtitle" id="subtitle">Sign in to save favorites across the site</div>
       </div>
-      <div id="authArea"></div>
+      <div class="auth" id="authArea"></div>
     </div>
 
-    <div id="authForms"></div>
-    <div id="content"></div>
+    <div class="content" id="content">
+      <!-- dynamic -->
+    </div>
+
+    <div style="margin-top:18px"><a class="tiny" href="#">Powered by LowkeyMods widget</a></div>
   </div>
 
+  <!-- Firebase SDKs (modular) -->
   <script type="module">
-    // Firebase imports (v12.6.0)
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-    import {
-      getAuth,
-      onAuthStateChanged,
-      signInWithEmailAndPassword,
-      createUserWithEmailAndPassword,
-      signOut
-    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-    import {
-      getFirestore,
-      doc,
-      collection,
-      setDoc,
-      deleteDoc,
-      getDocs,
-      query,
-      orderBy,
-      serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js';
+    import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js';
+    import { getFirestore, collection, doc, setDoc, getDocs, query, orderBy, deleteDoc } from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js';
 
-    // ---- YOUR FIREBASE CONFIG ----
+    // ======= CONFIG =======
     const firebaseConfig = {
       apiKey: "AIzaSyBqDItP58Soa4A2rG98ZOLULEbHxB8XG1M",
       authDomain: "lowkeymods27.firebaseapp.com",
@@ -132,246 +59,189 @@
       messagingSenderId: "814041484874",
       appId: "1:814041484874:web:867a38f37c394a2a72e0b3"
     };
-    // ------------------------------
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    const authArea   = document.getElementById('authArea');
-    const authForms  = document.getElementById('authForms');
-    const content    = document.getElementById('content');
+    // UI refs
+    const authArea = document.getElementById('authArea');
+    const content = document.getElementById('content');
     const subtitleEl = document.getElementById('subtitle');
 
-    // -------- URL PARAMS / MODES --------
-    function getQueryAll() {
-      const p = new URLSearchParams(location.search);
-      return {
-        productId: p.get('id')    || '',
-        title:     p.get('title') || '',
-        price:     p.get('price') || '',
-        img:       p.get('img')   || '',
-        mode:      p.get('mode')  || ''
-      };
-    }
-    const qAll = getQueryAll();
-
-    // pending product for auto-add after login
+    // parse querystring
+    const qAll = (()=>{const p=new URLSearchParams(location.search); const o={}; for(const [k,v] of p) o[k]=v; return o})();
+    // pending product object from URL (id,title,price,img)
     let pendingProduct = null;
-    if (qAll.productId) {
-      pendingProduct = {
-        productId: qAll.productId,
-        title:     qAll.title,
-        price:     qAll.price,
-        img:       qAll.img
+    if (qAll.id) {
+      pendingProduct = { id: qAll.id, title: qAll.title || '', price: qAll.price || '', img: qAll.img || '' };
+    }
+
+    // escape
+    function esc(s){return String(s||'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')}
+
+    // ======= AUTH UI / RENDER =======
+    function showSignIn(){renderSignForm(false)}
+    function showSignUp(){renderSignForm(true)}
+
+    function renderSignForm(isSignup){
+      authArea.innerHTML='';
+      const box = document.createElement('div');
+      box.className='card';
+      box.innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:8px;width:320px">
+          <div style="font-weight:700">${isSignup? 'Create account' : 'Sign in'}</div>
+          <input id="w_email" placeholder="email" style="padding:8px;border-radius:6px;background:#0e0e0f;border:1px solid rgba(255,255,255,0.04);color:var(--accent-2)" />
+          <input id="w_pass" placeholder="password" type="password" style="padding:8px;border-radius:6px;background:#0e0e0f;border:1px solid rgba(255,255,255,0.04);color:var(--accent-2)" />
+          <div style="display:flex;gap:8px;align-items:center">
+            <button id="doAuth">${isSignup? 'Sign up' : 'Sign in'}</button>
+            <button id="google" class="secondary">Google</button>
+            <button id="cancel" class="secondary">Cancel</button>
+          </div>
+          <div id="authMsg" class="muted" style="font-size:13px"></div>
+        </div>`;
+      authArea.appendChild(box);
+      document.getElementById('cancel').onclick = ()=>{authArea.innerHTML='';renderAuthUi(null)};
+      document.getElementById('google').onclick = async ()=>{
+        try{
+          const provider = new GoogleAuthProvider();
+          await signInWithPopup(auth, provider);
+        }catch(e){console.error(e); document.getElementById('authMsg').textContent = e.message}
+      };
+      document.getElementById('doAuth').onclick = async ()=>{
+        const email = document.getElementById('w_email').value.trim();
+        const pass = document.getElementById('w_pass').value.trim();
+        document.getElementById('authMsg').textContent = 'Please wait...';
+        try{
+          if (isSignup) {
+            await createUserWithEmailAndPassword(auth, email, pass);
+          } else {
+            await signInWithEmailAndPassword(auth, email, pass);
+          }
+        }catch(err){console.error(err); document.getElementById('authMsg').textContent = err.message}
       };
     }
 
-    // ESCAPE HTML
-    function escapeHtml(s){
-      return (s||'').toString().replace(/[&<>"']/g, c => ({
-        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-      }[c]));
+    async function addFavorite(uid, product){
+      if(!uid || !product || !product.id) throw new Error('invalid');
+      const ref = doc(db, 'users', uid, 'favorites', product.id);
+      await setDoc(ref, { ...product, createdAt: new Date().toISOString() });
     }
 
-    // ---- AUTH UI RENDER ----
-    function renderAuthUi(user) {
-      authArea.innerHTML = '';
-      authForms.innerHTML = '';
+    async function removeFavorite(uid, id){
+      await deleteDoc(doc(db, 'users', uid, 'favorites', id));
+    }
 
-      // MINI MODE: compact login/signup for embedding on all pages
-      if (qAll.mode === 'mini') {
-        subtitleEl.textContent = 'Sign in to save favorites across the site';
-        if (user) {
-          authArea.innerHTML =
-            `<div class="row">
-              <div class="small">Signed in</div>
-              <button id="outMini">Sign out</button>
-            </div>`;
-          document.getElementById('outMini').onclick = async () => { await signOut(auth); };
-          // In mini mode we keep content empty (no favorites list here)
-          content.innerHTML = '';
-        } else {
-          authArea.innerHTML =
-            `<div class="row">
-              <button id="miniSignIn">Sign in</button>
-              <button id="miniSignUp" class="secondary">Sign up</button>
-            </div>`;
-          document.getElementById('miniSignIn').onclick = showSignIn;
-          document.getElementById('miniSignUp').onclick = showSignUp;
-          content.innerHTML = '';
+    async function renderContent(user){
+      authArea.innerHTML='';
+      content.innerHTML = '<div class="notice">Loading your favorites...</div>';
+
+      try{
+        if (!user) {
+          // show preview when not signed in (if ?id provided)
+          if (qAll.id) {
+            content.innerHTML = `
+              <div class="card">
+                <img class="prod" src="${esc(qAll.img)}"/>
+                <div>
+                  <div style="font-weight:700">${esc(qAll.title)}</div>
+                  <div class="muted">${esc(qAll.price)}</div>
+                </div>
+                <div style="margin-left:auto"><a class="link" href="${location.href}" onclick="">Open to add</a></div>
+              </div>`;
+          } else {
+            content.innerHTML = '<div class="empty">You are not signed in. Add items from product pages to save them here.</div>';
+          }
+          return;
         }
+
+        // query favorites
+        const favCol = collection(db, 'users', user.uid, 'favorites');
+        const q = query(favCol, orderBy('createdAt','desc'));
+        const snap = await getDocs(q);
+        if (snap.empty) {
+          content.innerHTML = '<div class="empty">No favorites yet. Add products from the catalog.</div>';
+          return;
+        }
+        content.innerHTML = '';
+        snap.forEach(docSnap=>{
+          const d = docSnap.data();
+          const el = document.createElement('div'); el.className='card';
+          el.innerHTML = `
+            <img class="prod" src="${esc(d.img)}" />
+            <div style="flex:1">
+              <div style="font-weight:700">${esc(d.title)}</div>
+              <div class="muted">${esc(d.price)}</div>
+            </div>
+            <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+              <button class="remove" data-id="${docSnap.id}">Remove</button>
+              <a class="link" href="https://www.instagram.com/lowkey._.mods" target="_blank">Order (DM)</a>
+            </div>`;
+          content.appendChild(el);
+        });
+        document.querySelectorAll('.remove').forEach(b=> b.onclick = async (ev)=>{
+          const id = ev.currentTarget.dataset.id; await removeFavorite(user.uid, id); renderContent(user);
+        });
+      }catch(err){
+        console.error('renderContent error', err);
+        content.innerHTML = <div class="empty">Error loading favorites: ${esc(err.message||err)}</div>;
+      }
+    }
+
+    // render auth / mini mode
+    function renderAuthUi(user){
+      authArea.innerHTML='';
+      content.innerHTML='';
+      // mini mode shows only sign in / sign up buttons
+      if (qAll.mode === 'mini'){
+        subtitleEl.textContent = 'Sign in to save favorites across the site';
+        const wrap = document.createElement('div'); wrap.className='mini';
+        const signIn = document.createElement('button'); signIn.textContent='Sign in'; signIn.onclick = showSignIn;
+        const signUp = document.createElement('button'); signUp.textContent='Sign up'; signUp.className='secondary'; signUp.onclick = showSignUp;
+        wrap.appendChild(signIn); wrap.appendChild(signUp);
+        authArea.appendChild(wrap);
+        // keep content empty
         return;
       }
 
-      // FULL MODE: Favorites page
       subtitleEl.textContent = 'Save products to view or order later';
-      if (user) {
-        const btn = document.createElement('button');
-        btn.textContent = 'Sign out';
-        btn.onclick = async () => { await signOut(auth); };
+      if (user){
+        const btn = document.createElement('button'); btn.textContent='Sign out'; btn.onclick = ()=> signOut(auth);
         authArea.appendChild(btn);
         renderContent(user);
       } else {
-        const signInBtn = document.createElement('button');
-        signInBtn.textContent = 'Sign in';
-        signInBtn.onclick = () => showSignIn();
-        const signUpBtn = document.createElement('button');
-        signUpBtn.textContent = 'Sign up';
-        signUpBtn.classList.add('secondary');
-        signUpBtn.onclick = () => showSignUp();
-        authArea.appendChild(signInBtn);
-        authArea.appendChild(signUpBtn);
-        renderPreview(); // show product preview if called with ?id=...
+        const signInBtn = document.createElement('button'); signInBtn.textContent='Sign in'; signInBtn.onclick = showSignIn;
+        const signUpBtn = document.createElement('button'); signUpBtn.textContent='Sign up'; signUpBtn.className='secondary'; signUpBtn.onclick = showSignUp;
+        authArea.appendChild(signInBtn); authArea.appendChild(signUpBtn);
+        renderContent(null);
       }
     }
 
-    // ---- AUTH FORMS ----
-    function showSignIn(){
-      authForms.innerHTML = `
-        <div class="auth-block">
-          <input id="email" type="email" placeholder="Email" /><br/><br/>
-          <input id="pw" type="password" placeholder="Password" /><br/><br/>
-          <div class="row">
-            <button id="doSignIn">Sign in</button>
-            <span class="muted small">or <a class="link" id="gotoSignup">create an account</a></span>
-          </div>
-        </div>`;
-      document.getElementById('doSignIn').onclick = async ()=>{
-        const email = document.getElementById('email').value.trim();
-        const pw    = document.getElementById('pw').value;
-        try {
-          await signInWithEmailAndPassword(auth, email, pw);
-        } catch(e){
-          alert('Sign in error: '+e.message);
+    // listen auth state
+    onAuthStateChanged(auth, async (user)=>{
+      try{
+        renderAuthUi(user);
+        // if user logged in and we have pending product, add it
+        if (user && pendingProduct){
+          try{
+            await addFavorite(user.uid, pendingProduct);
+            pendingProduct = null; // consumed
+            // remove params from url
+            history.replaceState(null,'', location.pathname + (qAll.mode ? ('?mode='+encodeURIComponent(qAll.mode)) : ''));
+            renderContent(user);
+          }catch(e){console.error('auto-add error', e)}
         }
-      };
-      document.getElementById('gotoSignup').onclick = showSignUp;
-    }
-
-    function showSignUp(){
-      authForms.innerHTML = `
-        <div class="auth-block">
-          <input id="s_email" type="email" placeholder="Email" /><br/><br/>
-          <input id="s_pw" type="password" placeholder="Password (6+ chars)" /><br/><br/>
-          <div class="row">
-            <button id="doSignUp">Create account</button>
-          </div>
-        </div>`;
-      document.getElementById('doSignUp').onclick = async ()=>{
-        const email = document.getElementById('s_email').value.trim();
-        const pw    = document.getElementById('s_pw').value;
-        try {
-          await createUserWithEmailAndPassword(auth, email, pw);
-        } catch(e){
-          alert('Sign up error: '+e.message);
-        }
-      };
-    }
-
-    // ---- PREVIEW MODE (when opened from product link) ----
-    function renderPreview(){
-      content.innerHTML = '';
-      if (!qAll.productId) {
-        content.innerHTML = `<div class="muted center" style="padding:20px;">
-          Open a product from LowkeyMods and tap "Add to favorites".
-        </div>`;
-        return;
-      }
-      const c = document.createElement('div');
-      c.className = 'card';
-      c.innerHTML = `
-        <img class="prod" src="${qAll.img || 'https://via.placeholder.com/300x200?text=Lowkey'}" />
-        <div style="flex:1;">
-          <div style="font-weight:700;font-size:14px;">${escapeHtml(qAll.title || 'Product')}</div>
-          <div class="muted small" style="margin-top:2px;">${escapeHtml(qAll.price || '')}</div>
-          <div style="margin-top:8px;"><button id="favNow">Add to favorites</button></div>
-        </div>`;
-      content.appendChild(c);
-      const btn = document.getElementById('favNow');
-      btn.onclick = async ()=>{
-        if (!auth.currentUser) {
-          showSignIn();
-          return;
-        }
-        await addFavorite(auth.currentUser.uid, pendingProduct || qAll);
-        alert('Added to favorites');
-        // After manual add, you can clear query if you want
-      };
-    }
-
-    // ---- FAVORITES LIST ----
-    async function renderContent(user){
-      if (qAll.mode === 'mini') return; // mini mode doesn't show full list here
-      authForms.innerHTML = '';
-      content.innerHTML = `<div class="muted center" style="padding:20px;">Loading your favorites...</div>`;
-
-      const favCol = collection(db, 'users', user.uid, 'favorites');
-      const q = query(favCol, orderBy('createdAt','desc'));
-      const snap = await getDocs(q);
-      content.innerHTML = '';
-      if (snap.empty) {
-        content.innerHTML = `<div class="muted center" style="padding:20px;">
-          No favorites yet.<br/>Open a product and click "Add to favorites".
-        </div>`;
-        return;
-      }
-      snap.forEach(docSnap => {
-        const data = docSnap.data();
-        const item = document.createElement('div');
-        item.className = 'card';
-        item.innerHTML = `
-          <img class="prod" src="${data.img || 'https://via.placeholder.com/300x200'}" />
-          <div style="flex:1;">
-            <div style="font-weight:700;font-size:14px;">${escapeHtml(data.title || '')}</div>
-            <div class="muted small" style="margin-top:2px;">${escapeHtml(data.price || '')}</div>
-            <div style="margin-top:8px;" class="row">
-              <button class="remove" data-id="${docSnap.id}">Remove</button>
-              <a class="link" href="https://www.instagram.com/lowkey._.mods" target="_blank">Order (DM)</a>
-            </div>
-          </div>`;
-        content.appendChild(item);
-      });
-      document.querySelectorAll('.remove').forEach(btn=>{
-        btn.onclick = async (ev)=>{
-          const id = ev.target.dataset.id;
-          await deleteDoc(doc(db, 'users', user.uid, 'favorites', id));
-          renderContent(user);
-        };
-      });
-    }
-
-    // ---- ADD FAVORITE ----
-    async function addFavorite(uid, product){
-      if (!product || !product.productId) return;
-      const ref = doc(db, 'users', uid, 'favorites', product.productId);
-      await setDoc(ref, {
-        title: product.title || '',
-        price: product.price || '',
-        img:   product.img   || '',
-        createdAt: serverTimestamp()
-      });
-    }
-
-    // ---- AUTH STATE LISTENER + AUTO-ADD ----
-    onAuthStateChanged(auth, async (user) => {
-      renderAuthUi(user);
-
-      // auto-add pending product after login/signup (full mode only)
-      if (user && pendingProduct && qAll.mode !== 'mini') {
-        try {
-          await addFavorite(user.uid, pendingProduct);
-          alert('Product added to favorites');
-          pendingProduct = null;
-          // clean URL (remove product params, keep mode if present)
-          const basePath = location.pathname + (qAll.mode ? ('?mode='+encodeURIComponent(qAll.mode)) : '');
-          history.replaceState(null, '', basePath);
-          renderContent(user);
-        } catch (e) {
-          console.error('Auto-add error', e);
-        }
-      }
+      }catch(e){console.error(e)}
     });
+
+    // auto-add when directly opened while signed in
+    if (auth.currentUser && pendingProduct){
+      addFavorite(auth.currentUser.uid, pendingProduct).then(()=> renderContent(auth.currentUser)).catch(e=>console.error(e));
+    }
+
+    // helper for escaping
+    window.escapeHtml = esc;
+
   </script>
 </body>
 </html>
