@@ -86,6 +86,26 @@
       .card{flex-direction:row;}
     }
   </style>
+  <style>
+#toast {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background: #222;
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 8px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+  font-size: 15px;
+  z-index: 9999;
+}
+#toast.show {
+  opacity: 1;
+}
+</style>
+
 </head>
 <body>
   <div class="wrap">
@@ -99,6 +119,8 @@
 
     <div id="authForms"></div>
     <div id="content"></div>
+    <div id="toast"></div>
+
   </div>
 
   <script type="module">
@@ -131,6 +153,15 @@
       storageBucket: "lowkeymods27.firebasestorage.app",
       messagingSenderId: "814041484874",
       appId: "1:814041484874:web:867a38f37c394a2a72e0b3"
+      function showToast(message) {
+    const t = document.getElementById("toast");
+    t.textContent = message;
+    t.classList.add("show");
+    setTimeout(() => {
+        t.classList.remove("show");
+    }, 2000); // 2 seconds
+}
+
     };
     // ------------------------------
 
@@ -295,7 +326,8 @@
           return;
         }
         await addFavorite(auth.currentUser.uid, pendingProduct || qAll);
-        alert('Added to favorites');
+        showToast("Added to Favorites");
+
         // After manual add, you can clear query if you want
       };
     }
@@ -375,3 +407,4 @@
   </script>
 </body>
 </html>
+
