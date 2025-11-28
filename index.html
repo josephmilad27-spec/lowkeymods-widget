@@ -85,27 +85,24 @@
       .header{flex-direction:column;align-items:flex-start;}
       .card{flex-direction:row;}
     }
-  </style>
-  <style>
-#toast {
-  position: fixed;
-  bottom: 30px;
-  right: 30px;
-  background: #222;
-  color: #fff;
-  padding: 12px 20px;
-  border-radius: 8px;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.4s ease;
-  font-size: 15px;
-  z-index: 9999;
-}
-#toast.show {
-  opacity: 1;
-}
-</style>
 
+    /* toast */
+    #toast {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: #222;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 8px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+      font-size: 15px;
+      z-index: 9999;
+    }
+    #toast.show { opacity: 1; pointer-events: auto; }
+  </style>
 </head>
 <body>
   <div class="wrap">
@@ -120,7 +117,6 @@
     <div id="authForms"></div>
     <div id="content"></div>
     <div id="toast"></div>
-
   </div>
 
   <script type="module">
@@ -153,15 +149,6 @@
       storageBucket: "lowkeymods27.firebasestorage.app",
       messagingSenderId: "814041484874",
       appId: "1:814041484874:web:867a38f37c394a2a72e0b3"
-      function showToast(message) {
-    const t = document.getElementById("toast");
-    t.textContent = message;
-    t.classList.add("show");
-    setTimeout(() => {
-        t.classList.remove("show");
-    }, 2000); // 2 seconds
-}
-
     };
     // ------------------------------
 
@@ -173,6 +160,14 @@
     const authForms  = document.getElementById('authForms');
     const content    = document.getElementById('content');
     const subtitleEl = document.getElementById('subtitle');
+
+    // simple toast
+    function showToast(message, ms = 2000) {
+      const t = document.getElementById("toast");
+      t.textContent = message;
+      t.classList.add("show");
+      setTimeout(() => t.classList.remove("show"), ms);
+    }
 
     // -------- URL PARAMS / MODES --------
     function getQueryAll() {
@@ -274,7 +269,7 @@
         try {
           await signInWithEmailAndPassword(auth, email, pw);
         } catch(e){
-          alert('Sign in error: '+e.message);
+          showToast('Sign in error: '+(e.message || e));
         }
       };
       document.getElementById('gotoSignup').onclick = showSignUp;
@@ -295,7 +290,7 @@
         try {
           await createUserWithEmailAndPassword(auth, email, pw);
         } catch(e){
-          alert('Sign up error: '+e.message);
+          showToast('Sign up error: '+(e.message || e));
         }
       };
     }
@@ -327,8 +322,6 @@
         }
         await addFavorite(auth.currentUser.uid, pendingProduct || qAll);
         showToast("Added to Favorites");
-
-        // After manual add, you can clear query if you want
       };
     }
 
@@ -338,39 +331,44 @@
       authForms.innerHTML = '';
       content.innerHTML = `<div class="muted center" style="padding:20px;">Loading your favorites...</div>`;
 
-      const favCol = collection(db, 'users', user.uid, 'favorites');
-      const q = query(favCol, orderBy('createdAt','desc'));
-      const snap = await getDocs(q);
-      content.innerHTML = '';
-      if (snap.empty) {
-        content.innerHTML = `<div class="muted center" style="padding:20px;">
-          No favorites yet.<br/>Open a product and click "Add to favorites".
-        </div>`;
-        return;
-      }
-      snap.forEach(docSnap => {
-        const data = docSnap.data();
-        const item = document.createElement('div');
-        item.className = 'card';
-        item.innerHTML = `
-          <img class="prod" src="${data.img || 'https://via.placeholder.com/300x200'}" />
-          <div style="flex:1;">
-            <div style="font-weight:700;font-size:14px;">${escapeHtml(data.title || '')}</div>
-            <div class="muted small" style="margin-top:2px;">${escapeHtml(data.price || '')}</div>
-            <div style="margin-top:8px;" class="row">
-              <button class="remove" data-id="${docSnap.id}">Remove</button>
-              <a class="link" href="https://www.instagram.com/lowkey._.mods" target="_blank">Order (DM)</a>
-            </div>
+      try {
+        const favCol = collection(db, 'users', user.uid, 'favorites');
+        const q = query(favCol, orderBy('createdAt','desc'));
+        const snap = await getDocs(q);
+        content.innerHTML = '';
+        if (snap.empty) {
+          content.innerHTML = `<div class="muted center" style="padding:20px;">
+            No favorites yet.<br/>Open a product and click "Add to favorites".
           </div>`;
-        content.appendChild(item);
-      });
-      document.querySelectorAll('.remove').forEach(btn=>{
-        btn.onclick = async (ev)=>{
-          const id = ev.target.dataset.id;
-          await deleteDoc(doc(db, 'users', user.uid, 'favorites', id));
-          renderContent(user);
-        };
-      });
+          return;
+        }
+        snap.forEach(docSnap => {
+          const data = docSnap.data();
+          const item = document.createElement('div');
+          item.className = 'card';
+          item.innerHTML = `
+            <img class="prod" src="${data.img || 'https://via.placeholder.com/300x200'}" />
+            <div style="flex:1;">
+              <div style="font-weight:700;font-size:14px;">${escapeHtml(data.title || '')}</div>
+              <div class="muted small" style="margin-top:2px;">${escapeHtml(data.price || '')}</div>
+              <div style="margin-top:8px;" class="row">
+                <button class="remove" data-id="${docSnap.id}">Remove</button>
+                <a class="link" href="https://www.instagram.com/lowkey._.mods" target="_blank">Order (DM)</a>
+              </div>
+            </div>`;
+          content.appendChild(item);
+        });
+        document.querySelectorAll('.remove').forEach(btn=>{
+          btn.onclick = async (ev)=>{
+            const id = ev.target.dataset.id;
+            await deleteDoc(doc(db, 'users', user.uid, 'favorites', id));
+            renderContent(user);
+          };
+        });
+      } catch(err) {
+        console.error('renderContent error', err);
+        content.innerHTML = `<div class="muted center" style="padding:20px;">Error loading favorites: ${escapeHtml(err.message || err)}</div>`;
+      }
     }
 
     // ---- ADD FAVORITE ----
@@ -393,7 +391,7 @@
       if (user && pendingProduct && qAll.mode !== 'mini') {
         try {
           await addFavorite(user.uid, pendingProduct);
-          alert('Product added to favorites');
+          showToast('Product added to favorites');
           pendingProduct = null;
           // clean URL (remove product params, keep mode if present)
           const basePath = location.pathname + (qAll.mode ? ('?mode='+encodeURIComponent(qAll.mode)) : '');
@@ -407,4 +405,3 @@
   </script>
 </body>
 </html>
-
